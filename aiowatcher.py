@@ -36,8 +36,6 @@ def _check_all(modify_times):
         path = getattr(module, '__file__', None)
         if not path:
             continue
-        if path.endswith(".pyc") or path.endswith(".pyo"):
-            path = path[:-1]
         _check(path, modify_times)
     for path in _files:
         _check(path, modify_times)
