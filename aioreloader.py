@@ -33,7 +33,7 @@ def _call_periodically(loop: _abstract_loop, interval, callback, *args):
 
 
 def _check_all(modify_times):
-    for module in sys.modules.values():
+    for module in list(sys.modules.values()):
         if not isinstance(module, ModuleType):
             continue
         path = getattr(module, '__file__', None)
