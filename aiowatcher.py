@@ -1,6 +1,6 @@
 import sys
 import os
-from asyncio import AbstractEventLoop
+from asyncio import AbstractEventLoop, sleep
 from types import ModuleType
 
 
@@ -23,10 +23,11 @@ def watch(path):
 
 
 def _call_periodically(loop: AbstractEventLoop, interval, callback, *args):
-    def wrap(args):
-        callback(*args)
-        loop.call_later(interval, wrap, args)
-    loop.call_later(interval, wrap, args)
+    async def wrap():
+        while True:
+            await sleep(interval)
+            callback(*args)
+    return loop.create_task(wrap())
 
 
 def _check_all(modify_times):
