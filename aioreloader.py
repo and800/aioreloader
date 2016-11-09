@@ -1,11 +1,13 @@
 import sys
 import os
+import subprocess
 import asyncio
 from types import ModuleType
 
 _abstract_loop = asyncio.AbstractEventLoop
 
 _started = False
+_reload_attempted = False
 _files = set()
 
 
@@ -33,6 +35,8 @@ def _call_periodically(loop: _abstract_loop, interval, callback, *args):
 
 
 def _check_all(modify_times):
+    if _reload_attempted:
+        return
     for module in list(sys.modules.values()):
         if not isinstance(module, ModuleType):
             continue
@@ -50,4 +54,22 @@ def _check(target, modify_times):
         modify_times[target] = time
         return
     if modify_times[target] != time:
-        os.execv(sys.executable, [sys.executable] + sys.argv)
+        _reload()
+
+
+def _reload():
+    global _reload_attempted
+    _reload_attempted = True
+    if sys.platform == 'win32':
+        subprocess.Popen([sys.executable] + sys.argv)
+        sys.exit(0)
+    else:
+        try:
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+        except OSError:
+            os.spawnv(
+                os.P_NOWAIT,
+                sys.executable,
+                [sys.executable] + sys.argv
+            )
+            os._exit(0)
