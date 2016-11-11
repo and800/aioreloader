@@ -11,7 +11,13 @@ _reload_attempted = False
 _files = set()
 
 
-def start(loop: _abstract_loop, interval=0.5):
+def start(loop: _abstract_loop, interval: float = 0.5) -> None:
+    """
+    Start the reloader: create the task which is watching
+    loaded modules and manually added files via ``watch()``
+    and reloading the process in case of modification, and
+    attach this task to the loop.
+    """
     global _started
     if _started:
         return
@@ -21,7 +27,10 @@ def start(loop: _abstract_loop, interval=0.5):
     _call_periodically(loop, interval, _check_all, modify_times)
 
 
-def watch(path):
+def watch(path: str) -> None:
+    """
+    Add any file to the watching list.
+    """
     _files.add(path)
 
 
