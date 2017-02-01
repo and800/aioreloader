@@ -21,12 +21,12 @@ except AttributeError:
 
 _abstract_loop = asyncio.AbstractEventLoop
 
-_started = False
+_started = None
 _reload_attempted = False
 _files = set()
 
 
-def start(loop: _abstract_loop = None, interval: float = 0.5) -> None:
+def start(loop: _abstract_loop = None, interval: float = 0.5) -> asyncio.Task:
     """
     Start the reloader: create the task which is watching
     loaded modules and manually added files via ``watch()``
@@ -37,12 +37,10 @@ def start(loop: _abstract_loop = None, interval: float = 0.5) -> None:
         loop = asyncio.get_event_loop()
 
     global _started
-    if _started:
-        return
-    _started = True
-
-    modify_times = {}
-    return _call_periodically(loop, interval, _check_all, modify_times)
+    if not _started:
+        modify_times = {}
+        _started = _call_periodically(loop, interval, _check_all, modify_times)
+    return _started
 
 
 def watch(path: str) -> None:
