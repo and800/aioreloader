@@ -4,6 +4,11 @@ import subprocess
 import asyncio
 from types import ModuleType
 
+try:
+    ensure_future = asyncio.ensure_future
+except AttributeError:
+    ensure_future = getattr(asyncio, 'async')
+
 _abstract_loop = asyncio.AbstractEventLoop
 
 _started = False
@@ -43,7 +48,7 @@ def _call_periodically(loop: _abstract_loop, interval, callback, *args):
         while True:
             yield from asyncio.sleep(interval, loop=loop)
             callback(*args)
-    return asyncio.ensure_future(wrap(), loop=loop)
+    return ensure_future(wrap(), loop=loop)
 
 
 def _check_all(modify_times):
