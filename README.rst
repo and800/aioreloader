@@ -25,3 +25,9 @@ Requirements
 ------------
 
 Python - at least 3.3
+
+Installation
+------------
+.. code-block:: bash
+
+    $ pip install aioreloader

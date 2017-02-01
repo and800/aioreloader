@@ -1,8 +1,18 @@
+"""
+Port of tornado reloader to asyncio.
+Reloads your asyncio-based application automatically
+when you modify the source code.
+
+https://github.com/and800/aioreloader
+"""
+
 import sys
 import os
 import subprocess
 import asyncio
 from types import ModuleType
+
+__version__ = '0.0.0'
 
 try:
     ensure_future = asyncio.ensure_future
