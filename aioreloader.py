@@ -4,6 +4,11 @@ import subprocess
 import asyncio
 from types import ModuleType
 
+try:
+    ensure_future = asyncio.ensure_future
+except AttributeError:
+    ensure_future = getattr(asyncio, 'async')
+
 _abstract_loop = asyncio.AbstractEventLoop
 
 _started = False
@@ -11,20 +16,23 @@ _reload_attempted = False
 _files = set()
 
 
-def start(loop: _abstract_loop, interval: float = 0.5) -> None:
+def start(loop: _abstract_loop = None, interval: float = 0.5) -> None:
     """
     Start the reloader: create the task which is watching
     loaded modules and manually added files via ``watch()``
     and reloading the process in case of modification, and
     attach this task to the loop.
     """
+    if loop is None:
+        loop = asyncio.get_event_loop()
+
     global _started
     if _started:
         return
     _started = True
 
     modify_times = {}
-    _call_periodically(loop, interval, _check_all, modify_times)
+    return _call_periodically(loop, interval, _check_all, modify_times)
 
 
 def watch(path: str) -> None:
@@ -38,9 +46,9 @@ def _call_periodically(loop: _abstract_loop, interval, callback, *args):
     @asyncio.coroutine
     def wrap():
         while True:
-            yield from asyncio.sleep(interval)
+            yield from asyncio.sleep(interval, loop=loop)
             callback(*args)
-    return loop.create_task(wrap())
+    return ensure_future(wrap(), loop=loop)
 
 
 def _check_all(modify_times):
@@ -71,7 +79,7 @@ def _reload():
     _reload_attempted = True
     if sys.platform == 'win32':
         subprocess.Popen([sys.executable] + sys.argv)
-        sys.exit(0)
+        sys.exit(os.EX_OK)
     else:
         try:
             os.execv(sys.executable, [sys.executable] + sys.argv)
@@ -79,6 +87,6 @@ def _reload():
             os.spawnv(
                 os.P_NOWAIT,
                 sys.executable,
-                [sys.executable] + sys.argv
+                [sys.executable] + sys.argv,
             )
-            os._exit(0)
+            os._exit(os.EX_OK)

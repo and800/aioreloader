@@ -9,4 +9,7 @@ setup(
     author_email='andriy.maletsky@gmail.com',
     license='MIT',
     py_modules=['aioreloader'],
+    extras_require={
+        ':python_version=="3.3"': ['asyncio'],
+    },
 )
