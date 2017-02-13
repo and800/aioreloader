@@ -17,11 +17,11 @@ __version__ = '0.0.0'
 try:
     ensure_future = asyncio.ensure_future
 except AttributeError:
-    ensure_future = getattr(asyncio, 'async')
+    ensure_future = asyncio.async
 
 _abstract_loop = asyncio.AbstractEventLoop
 
-_started = None
+_task = None
 _reload_attempted = False
 _files = set()
 
@@ -36,11 +36,11 @@ def start(loop: _abstract_loop = None, interval: float = 0.5) -> asyncio.Task:
     if loop is None:
         loop = asyncio.get_event_loop()
 
-    global _started
-    if not _started:
+    global _task
+    if not _task:
         modify_times = {}
-        _started = _call_periodically(loop, interval, _check_all, modify_times)
-    return _started
+        _task = _call_periodically(loop, interval, _check_all, modify_times)
+    return _task
 
 
 def watch(path: str) -> None:
