@@ -17,7 +17,7 @@ __version__ = '0.0.0'
 try:
     ensure_future = asyncio.ensure_future
 except AttributeError:
-    ensure_future = asyncio.async
+    ensure_future = getattr(asyncio, 'async')
 
 _abstract_loop = asyncio.AbstractEventLoop
 
