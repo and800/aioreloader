@@ -12,7 +12,7 @@ import subprocess
 import asyncio
 from types import ModuleType
 
-__version__ = '0.0.0'
+__version__ = '0.0.1'
 
 try:
     ensure_future = asyncio.ensure_future
