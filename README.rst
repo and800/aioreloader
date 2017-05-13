@@ -21,6 +21,12 @@ Here's an example of usage with
     aioreloader.start()
     aiohttp.web.run_app(app)
 
+To add any file to watching list (which is not loaded as a python module):
+
+.. code-block:: python
+
+    aioreloader.watch('/etc/app_config.yml')
+
 Requirements
 ------------
 
