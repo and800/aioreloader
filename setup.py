@@ -1,13 +1,16 @@
 from setuptools import setup
 import re
 
-with open('aioreloader.py', 'r') as module:
-    content = module.read()
+version_file_path = 'aioreloader/__init__.py'
+readme_file_path = 'README.rst'
+
+with open(version_file_path, 'r') as version_file:
+    content = version_file.read()
 pattern = r"""^__version__\s*=\s*['"]([^'"]*)['"]"""
 version = re.search(pattern, content, re.M).group(1)
 
-with open('README.rst', 'r') as readme:
-    long_description = readme.read()
+with open(readme_file_path, 'r') as readme_file:
+    long_description = readme_file.read()
 
 setup(
     name='aioreloader',
@@ -32,7 +35,7 @@ setup(
         'Topic :: Software Development',
     ],
     keywords='aiohttp asyncio',
-    py_modules=['aioreloader'],
+    packages=['aioreloader'],
     extras_require={
         ':python_version=="3.3"': ['asyncio'],
     },

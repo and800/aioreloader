@@ -1,32 +1,22 @@
-"""
-Port of tornado reloader to asyncio.
-Reloads your asyncio-based application automatically
-when you modify the source code.
-
-https://github.com/and800/aioreloader
-"""
-
 import sys
 import os
 import subprocess
 import asyncio
 from types import ModuleType
 
-__version__ = '0.0.1'
-
 try:
     ensure_future = asyncio.ensure_future
 except AttributeError:
     ensure_future = getattr(asyncio, 'async')
 
-_abstract_loop = asyncio.AbstractEventLoop
+abstract_loop = asyncio.AbstractEventLoop
 
-_task = None
-_reload_attempted = False
-_files = set()
+task = None
+reload_attempted = False
+files = set()
 
 
-def start(loop: _abstract_loop = None, interval: float = 0.5) -> asyncio.Task:
+def start(loop: abstract_loop = None, interval: float = 0.5) -> asyncio.Task:
     """
     Start the reloader: create the task which is watching
     loaded modules and manually added files via ``watch()``
@@ -36,21 +26,21 @@ def start(loop: _abstract_loop = None, interval: float = 0.5) -> asyncio.Task:
     if loop is None:
         loop = asyncio.get_event_loop()
 
-    global _task
-    if not _task:
+    global task
+    if not task:
         modify_times = {}
-        _task = _call_periodically(loop, interval, _check_all, modify_times)
-    return _task
+        task = call_periodically(loop, interval, check_all, modify_times)
+    return task
 
 
 def watch(path: str) -> None:
     """
     Add any file to the watching list.
     """
-    _files.add(path)
+    files.add(path)
 
 
-def _call_periodically(loop: _abstract_loop, interval, callback, *args):
+def call_periodically(loop: abstract_loop, interval, callback, *args):
     @asyncio.coroutine
     def wrap():
         while True:
@@ -59,8 +49,8 @@ def _call_periodically(loop: _abstract_loop, interval, callback, *args):
     return ensure_future(wrap(), loop=loop)
 
 
-def _check_all(modify_times):
-    if _reload_attempted:
+def check_all(modify_times):
+    if reload_attempted:
         return
     for module in list(sys.modules.values()):
         if not isinstance(module, ModuleType):
@@ -68,23 +58,23 @@ def _check_all(modify_times):
         path = getattr(module, '__file__', None)
         if not path:
             continue
-        _check(path, modify_times)
-    for path in _files:
-        _check(path, modify_times)
+        check(path, modify_times)
+    for path in files:
+        check(path, modify_times)
 
 
-def _check(target, modify_times):
+def check(target, modify_times):
     time = os.stat(target).st_mtime
     if target not in modify_times:
         modify_times[target] = time
         return
     if modify_times[target] != time:
-        _reload()
+        reload()
 
 
-def _reload():
-    global _reload_attempted
-    _reload_attempted = True
+def reload():
+    global reload_attempted
+    reload_attempted = True
     if sys.platform == 'win32':
         subprocess.Popen([sys.executable] + sys.argv)
         sys.exit(os.EX_OK)
