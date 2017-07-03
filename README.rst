@@ -1,7 +1,7 @@
 aioreloader
 ===========
 
-Tool that reloads your asyncio-based application automatically when you
+Tool that reloads your `asyncio <https://docs.python.org/3/library/asyncio.html>`_-based application automatically when you
 modify the source code.
 
 Most of code has been borrowed from
