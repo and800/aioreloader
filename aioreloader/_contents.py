@@ -23,7 +23,7 @@ def start(loop: abstract_loop = None, interval: float = 0.5, func = None) -> asy
     loaded modules and manually added files via ``watch()``
     and reloading the process in case of modification, and
     attach this task to the loop.
-    
+
     If ``func`` is provided, it will be called when
     the application goes to reload.
     """
@@ -83,11 +83,9 @@ def check(target, modify_times):
 def reload():
     global reload_attempted
     reload_attempted = True
-
-    try:
+    
+    if reload_function is not None:
         reload_function()
-    except TypeError:
-        pass
 
     if sys.platform == 'win32':
         subprocess.Popen([sys.executable] + sys.argv)
