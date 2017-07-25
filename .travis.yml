@@ -1,0 +1,22 @@
+language: python
+python:
+    - "3.3"
+    - "3.4"
+    - "3.5"
+    - "3.6"
+    - "nightly"
+cache: pip
+
+install:
+    - pip install flake8
+
+script:
+    - flake8 aioreloader/ setup.py
+
+deploy:
+    provider: pypi
+    user: and800
+    password: $PYPI_PASSWORD
+    distributions: "sdist bdist_wheel"
+    on:
+        tags: true
