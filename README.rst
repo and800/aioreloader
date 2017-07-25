@@ -1,6 +1,9 @@
 aioreloader
 ===========
 
+.. image:: https://img.shields.io/pypi/v/aioreloader.svg
+  :target: https://pypi.org/project/aioreloader/
+
 Tool that reloads your `asyncio <https://docs.python.org/3/library/asyncio.html>`_-based application automatically when you
 modify the source code.
 
