@@ -32,7 +32,7 @@ def start(loop: abstract_loop = None, interval: float = 0.5, hook = None) -> asy
 
     global reload_hook
     if hook is not None:
-        reload_hook = func
+        reload_hook = hook
 
     global task
     if not task:
