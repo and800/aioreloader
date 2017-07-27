@@ -17,7 +17,11 @@ reload_hook = None
 files = set()
 
 
-def start(loop: abstract_loop = None, interval: float = 0.5, hook = None) -> asyncio.Task:
+def start(
+    loop: abstract_loop = None,
+    interval: float = 0.5,
+    hook=None
+) -> asyncio.Task:
     """
     Start the reloader: create the task which is watching
     loaded modules and manually added files via ``watch()``
