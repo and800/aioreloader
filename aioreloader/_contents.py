@@ -9,6 +9,13 @@ try:
 except AttributeError:
     ensure_future = getattr(asyncio, 'async')
 
+try:
+    from typing import Callable
+    hook_type = Callable[[], None]
+except ImportError:
+    from types import FunctionType
+    hook_type = FunctionType
+
 abstract_loop = asyncio.AbstractEventLoop
 
 task = None
@@ -20,7 +27,7 @@ files = set()
 def start(
     loop: abstract_loop = None,
     interval: float = 0.5,
-    hook=None
+    hook: hook_type = None
 ) -> asyncio.Task:
     """
     Start the reloader: create the task which is watching
