@@ -16,7 +16,7 @@ Usage
 -----
 
 Here's an example of usage with
-`aiohttp <https://github.com/KeepSafe/aiohttp>`_ framework:
+`aiohttp <https://github.com/aio-libs/aiohttp>`_ framework:
 
 .. code-block:: python
 
