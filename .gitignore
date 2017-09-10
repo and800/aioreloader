@@ -1,5 +1,12 @@
-.idea
 __pycache__
 build
 dist
 *.egg-info
+
+
+# common files, not specific to the project:
+.idea
+*.sublime-workspace
+*.sublime-project
+Thumbs.db
+.DS_Store
