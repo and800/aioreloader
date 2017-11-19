@@ -30,12 +30,14 @@ def start(
     hook: hook_type = None
 ) -> asyncio.Task:
     """
-    Start the reloader: create the task which is watching
-    loaded modules and manually added files via ``watch()``
-    and reloading the process in case of modification, and
-    attach this task to the loop.
+    Start the reloader.
 
-    If ``hook`` is provided, it will be called when
+    Create the task which is watching loaded modules
+    and manually added files via ``watch()``
+    and reloading the process in case of modification.
+    Attach this task to the loop.
+
+    If ``hook`` is provided, it will be called right before
     the application goes to the reload stage.
     """
     if loop is None:
@@ -53,9 +55,7 @@ def start(
 
 
 def watch(path: str) -> None:
-    """
-    Add any file to the watching list.
-    """
+    """Add any file to the watching list."""
     files.add(path)
 
 
