@@ -27,8 +27,7 @@ files = set()
 def start(
         loop: abstract_loop = None,
         interval: float = 0.5,
-        hook: hook_type = None
-    ) -> asyncio.Task:
+        hook: hook_type = None) -> asyncio.Task:
     """
     Start the reloader.
 
