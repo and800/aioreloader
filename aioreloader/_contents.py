@@ -49,7 +49,12 @@ def start(
     global task
     if not task:
         modify_times = {}
-        task = call_periodically(loop, interval, check_all, modify_times)
+        task = call_periodically(
+            loop,
+            interval,
+            check_and_reload,
+            modify_times
+        )
     return task
 
 
@@ -63,31 +68,44 @@ def call_periodically(loop: abstract_loop, interval, callback, *args):
     def wrap():
         while True:
             yield from asyncio.sleep(interval, loop=loop)
-            callback(*args)
+            yield from callback(*args, loop=loop)
     return ensure_future(wrap(), loop=loop)
 
 
-def check_all(modify_times):
+@asyncio.coroutine
+def check_and_reload(modify_times, loop: abstract_loop):
     if reload_attempted:
         return
+    files_changed = yield from loop.run_in_executor(
+        None,
+        check_all,
+        modify_times
+    )
+    if files_changed:
+        reload()
+
+
+def check_all(modify_times):
     for module in list(sys.modules.values()):
         if not isinstance(module, ModuleType):
             continue
         path = getattr(module, '__file__', None)
         if not path:
             continue
-        check(path, modify_times)
+        if check(path, modify_times):
+            return True
     for path in files:
-        check(path, modify_times)
+        if check(path, modify_times):
+            return True
+    return False
 
 
 def check(target, modify_times):
     time = os.stat(target).st_mtime
     if target not in modify_times:
         modify_times[target] = time
-        return
-    if modify_times[target] != time:
-        reload()
+        return False
+    return modify_times[target] != time
 
 
 def reload():
