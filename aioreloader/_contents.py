@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from types import ModuleType
 
 try:
@@ -49,11 +50,13 @@ def start(
     global task
     if not task:
         modify_times = {}
+        executor = ThreadPoolExecutor(1)
         task = call_periodically(
             loop,
             interval,
             check_and_reload,
-            modify_times
+            modify_times,
+            executor,
         )
     return task
 
@@ -73,11 +76,11 @@ def call_periodically(loop: abstract_loop, interval, callback, *args):
 
 
 @asyncio.coroutine
-def check_and_reload(modify_times, loop: abstract_loop):
+def check_and_reload(modify_times, executor, loop: abstract_loop):
     if reload_attempted:
         return
     files_changed = yield from loop.run_in_executor(
-        None,
+        executor,
         check_all,
         modify_times
     )
