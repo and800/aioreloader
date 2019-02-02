@@ -1,5 +1,6 @@
 import sys
 import os
+import os.path
 import subprocess
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -93,7 +94,7 @@ def check_all(modify_times):
         if not isinstance(module, ModuleType):
             continue
         path = getattr(module, '__file__', None)
-        if not path:
+        if not path or not os.path.isfile(path):
             continue
         if check(path, modify_times):
             return True
