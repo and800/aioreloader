@@ -12,6 +12,8 @@ Most of code has been borrowed from
 reloader built mostly by `@finiteloop <https://github.com/finiteloop>`_
 and `@bdarnell <https://github.com/bdarnell>`_. Thanks!
 
+From 0.3.x version aioreloader natively supports `-X` python arguments. Which is recommended way for development debug mode in aiohttp. 
+
 Usage
 -----
 
@@ -33,7 +35,7 @@ To add any file to watching list (which is not loaded as a python module):
 Requirements
 ------------
 
-Python - at least 3.3
+Python - at least 3.5
 
 Installation
 ------------

@@ -7,15 +7,12 @@ from concurrent.futures import ThreadPoolExecutor
 from types import ModuleType
 
 try:
-    ensure_future = asyncio.ensure_future
-except AttributeError:
-    ensure_future = getattr(asyncio, 'async')
-
-try:
     from typing import Callable
+
     hook_type = Callable[[], None]
 except ImportError:
     from types import FunctionType
+
     hook_type = FunctionType
 
 abstract_loop = asyncio.AbstractEventLoop
@@ -27,9 +24,8 @@ files = set()
 
 
 def start(
-        loop: abstract_loop = None,
-        interval: float = 0.5,
-        hook: hook_type = None) -> asyncio.Task:
+    loop: abstract_loop = None, interval: float = 0.5, hook: hook_type = None
+) -> asyncio.Task:
     """
     Start the reloader.
 
@@ -53,11 +49,7 @@ def start(
         modify_times = {}
         executor = ThreadPoolExecutor(1)
         task = call_periodically(
-            loop,
-            interval,
-            check_and_reload,
-            modify_times,
-            executor,
+            loop, interval, check_and_reload, modify_times, executor,
         )
     return task
 
@@ -67,24 +59,19 @@ def watch(path: str) -> None:
     files.add(path)
 
 
-def call_periodically(loop: abstract_loop, interval, callback, *args):
-    @asyncio.coroutine
-    def wrap():
+def call_periodically(loop, interval, callback, *args):
+    async def wrap():
         while True:
-            yield from asyncio.sleep(interval, loop=loop)
-            yield from callback(*args, loop=loop)
-    return ensure_future(wrap(), loop=loop)
+            await asyncio.sleep(interval)
+            await callback(*args, loop=loop)
+
+    return asyncio.ensure_future(wrap(), loop=loop)
 
 
-@asyncio.coroutine
-def check_and_reload(modify_times, executor, loop: abstract_loop):
+async def check_and_reload(modify_times, executor, loop: abstract_loop):
     if reload_attempted:
         return
-    files_changed = yield from loop.run_in_executor(
-        executor,
-        check_all,
-        modify_times
-    )
+    files_changed = await loop.run_in_executor(executor, check_all, modify_times)
     if files_changed:
         reload()
 
@@ -93,7 +80,7 @@ def check_all(modify_times):
     for module in list(sys.modules.values()):
         if not isinstance(module, ModuleType):
             continue
-        path = getattr(module, '__file__', None)
+        path = getattr(module, "__file__", None)
         if not path or not os.path.isfile(path):
             continue
         if check(path, modify_times):
@@ -119,16 +106,22 @@ def reload():
     if reload_hook is not None:
         reload_hook()
 
-    if sys.platform == 'win32':
-        subprocess.Popen([sys.executable] + sys.argv)
+    xopt = []
+    if hasattr(sys, "_xoptions") and sys._xoptions:
+        for k, v in sys._xoptions.items():
+            if type(v) == bool:
+                xopt.append("-X{}".format(k))
+            else:
+                xopt.append("-X{}={}".format(k, v))
+
+    if sys.platform == "win32":
+        subprocess.Popen([sys.executable] + xopt + sys.argv)
         sys.exit(os.EX_OK)
     else:
         try:
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+            os.execv(sys.executable, [sys.executable] + xopt + sys.argv)
         except OSError:
             os.spawnv(
-                os.P_NOWAIT,
-                sys.executable,
-                [sys.executable] + sys.argv,
+                os.P_NOWAIT, sys.executable, [sys.executable] + xopt + sys.argv,
             )
             os._exit(os.EX_OK)
