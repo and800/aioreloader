@@ -3,6 +3,7 @@ import os
 import os.path
 import subprocess
 import asyncio
+import hashlib
 from concurrent.futures import ThreadPoolExecutor
 from types import ModuleType
 
@@ -21,6 +22,7 @@ task = None
 reload_attempted = False
 reload_hook = None
 files = set()
+checksum_files = set()
 
 
 def start(
@@ -47,16 +49,25 @@ def start(
     global task
     if not task:
         modify_times = {}
+        checksums = {}
         executor = ThreadPoolExecutor(1)
         task = call_periodically(
-            loop, interval, check_and_reload, modify_times, executor,
+            loop,
+            interval,
+            check_and_reload,
+            modify_times,
+            checksums,
+            executor,
         )
     return task
 
 
-def watch(path: str) -> None:
+def watch(path: str, checksum: bool = False) -> None:
     """Add any file to the watching list."""
-    files.add(path)
+    if checksum:
+        checksum_files.add(path)
+    else:
+        files.add(path)
 
 
 def call_periodically(loop, interval, callback, *args):
@@ -68,15 +79,17 @@ def call_periodically(loop, interval, callback, *args):
     return asyncio.ensure_future(wrap(), loop=loop)
 
 
-async def check_and_reload(modify_times, executor, loop: abstract_loop):
+async def check_and_reload(modify_times, checksums, executor, loop: abstract_loop):
     if reload_attempted:
         return
-    files_changed = await loop.run_in_executor(executor, check_all, modify_times)
+    files_changed = await loop.run_in_executor(
+        executor, check_all, modify_times, checksums
+    )
     if files_changed:
         reload()
 
 
-def check_all(modify_times):
+def check_all(modify_times, checksums):
     for module in list(sys.modules.values()):
         if not isinstance(module, ModuleType):
             continue
@@ -88,6 +101,9 @@ def check_all(modify_times):
     for path in files:
         if check(path, modify_times):
             return True
+    for path in checksum_files:
+        if check(path, modify_times) and checksum_check(path, checksums):
+            return True
     return False
 
 
@@ -97,6 +113,24 @@ def check(target, modify_times):
         modify_times[target] = time
         return False
     return modify_times[target] != time
+
+
+def get_checksum(path):
+    h = hashlib.sha256()
+
+    with open(path, "rb") as f:
+        data = f.read()
+        h.update(data)
+
+    return h.hexdigest()
+
+
+def checksum_check(target, checksums):
+    checksum = get_checksum(target)
+    if target not in checksums:
+        checksums[target] = checksum
+        return False
+    return checksums[target] != checksum
 
 
 def reload():
@@ -122,6 +156,8 @@ def reload():
             os.execv(sys.executable, [sys.executable] + xopt + sys.argv)
         except OSError:
             os.spawnv(
-                os.P_NOWAIT, sys.executable, [sys.executable] + xopt + sys.argv,
+                os.P_NOWAIT,
+                sys.executable,
+                [sys.executable] + xopt + sys.argv,
             )
             os._exit(os.EX_OK)
