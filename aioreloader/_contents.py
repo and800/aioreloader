@@ -6,16 +6,10 @@ import asyncio
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
 from types import ModuleType
+from typing import Callable
 
-try:
-    from typing import Callable
 
-    hook_type = Callable[[], None]
-except ImportError:
-    from types import FunctionType
-
-    hook_type = FunctionType
-
+hook_type = Callable[[], None]
 abstract_loop = asyncio.AbstractEventLoop
 
 task = None
